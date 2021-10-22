@@ -13,7 +13,7 @@ import operacoes.Soma;
 public abstract class SO {
 
 	protected Processador processador = new Processador();
-	private HashMap<Integer, Operacao[]> novosProcessos = new HashMap<Integer, Operacao[]>();
+	private final HashMap<Integer, Operacao[]> novosProcessos = new HashMap<>();
 	protected int contadorCiclos = 0;  // alteração: de private para protected
 
 	public enum Escalonador {
