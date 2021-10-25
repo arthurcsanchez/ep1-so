@@ -7,25 +7,26 @@ public class PCB implements Comparable<PCB> {
 	public enum Estado {NOVO, PRONTO, EXECUTANDO, ESPERANDO, TERMINADO}
 	public int idProcesso; // primeiro processo criado deve ter id = 0
 	public Estado estado;
-	public int[] registradores;
+	public int[] registradores; // guarda estado dos registradores do processador na troca de contexto
 	public int contadorDePrograma;
-	public int cicloDeOrigem;
 	public Operacao[] codigo;
 
 	public int estimativaBurstCPU; // utilizado pelo SJF
 	public int estimativaTempoRestanteBurstCPU; // utilizado pelo SRTF
 	public int contadorBurstCPU; // utilizado para atualizar estimativaBurstCPU
 
-	public PCB(int idProcesso, int cicloDeOrigem, Operacao[] codigo) {
+	public int espera; // incrementar a cada ciclo de espera; utilizado no tempoEsperaMedio()
+
+	public PCB(int idProcesso, Operacao[] codigo) {
 		this.idProcesso = idProcesso;
 		this.estado = Estado.NOVO;
 		this.registradores = new int[5];
 		this.contadorDePrograma = 0;
-		this.cicloDeOrigem = cicloDeOrigem;
 		this.codigo = codigo;
 		this.estimativaBurstCPU = codigo.length;
 		this.estimativaTempoRestanteBurstCPU = this.estimativaBurstCPU;
 		this.contadorBurstCPU = 0;
+		this.espera = 0;
 	}
 
 	@Override
