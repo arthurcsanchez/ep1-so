@@ -7,12 +7,13 @@ import operacoes.OperacaoES;
 public class SeuSO extends SO {
 
 	private int contadorProcessos = 0;
+	public Escalonador escalonadorAtual;
 
 	@Override
 	// ATENCÃO: cria o processo mas o mesmo 
 	// só estará "pronto" no próximo ciclo
 	protected void criaProcesso(Operacao[] codigo) {
-		PCB processoAtual = new PCB(contadorProcessos++, PCB.Estado.NOVO, new int[5], 0, contadorCiclos, codigo);
+		PCB processoAtual = new PCB(contadorProcessos++, contadorCiclos, codigo);
 		// fazer alguma coisa para que fique pronto no proximo ciclo
 	}
 
@@ -37,6 +38,8 @@ public class SeuSO extends SO {
 	@Override
 	protected void executaCicloKernel() {
 		// ?
+		// fazer PCBs com estado NOVO ficarem PRONTO
+		// se o escalonador for SJF ou SRTF, dar sort na lista de processos
 		contadorCiclos++;
 	}
 
@@ -102,6 +105,6 @@ public class SeuSO extends SO {
 
 	@Override
 	public void defineEscalonador(Escalonador e) {
-		// definir o escalonador utilizando um switch
+		this.escalonadorAtual = e;
 	}
 }
