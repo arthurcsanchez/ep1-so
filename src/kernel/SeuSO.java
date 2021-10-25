@@ -56,15 +56,26 @@ public class SeuSO extends SO {
 				for (PCB p : processos) {
 					if (p.estado == PCB.Estado.EXECUTANDO) {
 						try {
-							return p.codigo[p.contadorDePrograma++];
+							Operacao prox = p.codigo[p.contadorDePrograma++];
+							if (prox instanceof OperacaoES) {
+								p.estado = PCB.Estado.ESPERANDO;
+								listaExecutando.remove(p);
+								listaEsperando.add(p);
+								return null; // processador entra em espera pelo burst de i/o
+							}
+							return prox;
 						} catch (ArrayIndexOutOfBoundsException e) {
 							p.estado = PCB.Estado.TERMINADO;
 							listaExecutando.remove(p);
 							listaTerminados.add(p);
+							break;
 						}
+					} else if (p.estado == PCB.Estado.ESPERANDO) {
+						return null; // processador continua em espera pelo burst de i/o
 					}
 				}
 				processador.registradores = new int[5];
+				numeroTrocasContexto++;
 				for (PCB p : processos) {
 					if (p.estado == PCB.Estado.PRONTO) {
 						p.estado = PCB.Estado.EXECUTANDO;
@@ -96,6 +107,8 @@ public class SeuSO extends SO {
 				} else {
 					listaNovos.add(p);
 				}
+			} else if (p.estado == PCB.Estado.ESPERANDO) {
+				p.espera++;
 			}
 		}
 	}

@@ -63,4 +63,9 @@ public class PCB implements Comparable<PCB> {
 		return 0;
 	}
 
+	public void atualizarEstimativaBurstCPU() { // a ser utilizado pelo SJF após fim de burst de CPU
+		this.estimativaBurstCPU = (this.estimativaBurstCPU + this.contadorBurstCPU) / 2;
+		this.contadorBurstCPU = 0;
+	}
+
 }
