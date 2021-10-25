@@ -1,4 +1,6 @@
 package kernel;
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 import operacoes.Operacao;
@@ -8,13 +10,14 @@ public class SeuSO extends SO {
 
 	private int contadorProcessos = 0;
 	public Escalonador escalonadorAtual;
+	public List<PCB> processos = new LinkedList<>();
 
 	@Override
 	// ATENCÃO: cria o processo mas o mesmo 
 	// só estará "pronto" no próximo ciclo
 	protected void criaProcesso(Operacao[] codigo) {
 		PCB processoAtual = new PCB(contadorProcessos++, contadorCiclos, codigo);
-		// fazer alguma coisa para que fique pronto no proximo ciclo
+		processos.add(processoAtual);
 	}
 
 	@Override
@@ -25,21 +28,20 @@ public class SeuSO extends SO {
 	@Override
 	// Assuma que 0 <= idDispositivo <= 4
 	protected OperacaoES proximaOperacaoES(int idDispositivo) {
-		// buscar próxima operação de ES pelo escalonador definido
+		// buscar próxima operação de ES pelo escalonador definido (a partir de um switch)
 		return null;
 	}
 
 	@Override
 	protected Operacao proximaOperacaoCPU() {
-		// buscar próxima operação de CPU pelo escalonador definido
+		// buscar próxima operação de CPU pelo escalonador definido (a partir de um switch)
 		return null;
 	}
 
 	@Override
 	protected void executaCicloKernel() {
-		// ?
-		// fazer PCBs com estado NOVO ficarem PRONTO
-		// se o escalonador for SJF ou SRTF, dar sort na lista de processos
+		// analisa e atualiza estados dos PCBs (ex. coloca NOVO como PRONTO)
+		Collections.sort(processos);
 		contadorCiclos++;
 	}
 
