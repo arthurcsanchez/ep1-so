@@ -13,11 +13,12 @@ public class PCB implements Comparable<PCB> {
 
 	public int estimativaBurstCPU; // utilizado pelo SJF
 	public int estimativaTempoRestanteBurstCPU; // utilizado pelo SRTF
-	public int contadorBurstCPU; // utilizado para atualizar estimativaBurstCPU
+	public int contadorBurstCPU; // utilizado para atualizar estimativaBurstCPU e também pelo RR
 
 	public int espera; // incrementar a cada ciclo de espera; utilizado no tempoEsperaMedio()
 
-	public PCB(int idProcesso, Operacao[] codigo) {
+	public PCB(SO.Escalonador escalonadorAtual, int idProcesso, Operacao[] codigo) {
+		this.escalonadorAtual = escalonadorAtual;
 		this.idProcesso = idProcesso;
 		this.estado = Estado.NOVO;
 		this.registradores = new int[5];
@@ -58,7 +59,6 @@ public class PCB implements Comparable<PCB> {
 				else if (this.idProcesso < pcb.idProcesso)
 					return -1;
 				break;
-			// falta ROUND_ROBIN_QUANTUM_5 (que provavelmente vai utilizar contadorBurstCPU)
 		}
 		return 0;
 	}

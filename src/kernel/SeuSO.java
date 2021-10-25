@@ -23,7 +23,7 @@ public class SeuSO extends SO {
 
 	@Override
 	protected void criaProcesso(Operacao[] codigo) {
-		PCB processoAtual = new PCB(contadorProcessos++, codigo);
+		PCB processoAtual = new PCB(escalonadorAtual, contadorProcessos++, codigo);
 		processos.add(processoAtual);
 	}
 
@@ -41,74 +41,116 @@ public class SeuSO extends SO {
 	@Override
 	// Assuma que 0 <= idDispositivo <= 4
 	protected OperacaoES proximaOperacaoES(int idDispositivo) {
-		// buscar próxima operação de ES pelo escalonador definido (a partir de um switch)
+		// TODO: buscar próxima operação de ES pelo escalonador definido (a partir de um switch)
 		return null;
 	}
 
 	@Override
 	protected Operacao proximaOperacaoCPU() {
-		// buscar próxima operação de CPU pelo escalonador definido (a partir de um switch)
+		// TODO: buscar próxima operação de CPU pelo escalonador definido (a partir de um switch)
+		// TODO: pegar primeiro pcb da lista de processos com estado pronto/execução (a depender do escalonador)
+		// TODO: atualizar contador de programa do pcb
+
+		switch (escalonadorAtual) {
+			case FIRST_COME_FIRST_SERVED:
+				for (PCB p : processos) {
+					if (p.estado == PCB.Estado.EXECUTANDO) {
+						try {
+							return p.codigo[p.contadorDePrograma++];
+						} catch (ArrayIndexOutOfBoundsException e) {
+							p.estado = PCB.Estado.TERMINADO;
+							listaExecutando.remove(p);
+							listaTerminados.add(p);
+						}
+					}
+				}
+				processador.registradores = new int[5];
+				for (PCB p : processos) {
+					if (p.estado == PCB.Estado.PRONTO) {
+						p.estado = PCB.Estado.EXECUTANDO;
+						listaProntos.remove(p);
+						listaExecutando.add(p);
+						return p.codigo[p.contadorDePrograma++];
+					}
+				}
+				break;
+			case SHORTEST_JOB_FIRST:
+				break;
+			case SHORTEST_REMANING_TIME_FIRST:
+				break;
+		}
+
 		return null;
 	}
 
 	@Override
 	protected void executaCicloKernel() {
-		// analisa e atualiza estados dos PCBs (ex. coloca NOVO como PRONTO)
-		// insere nas listas auxiliares os PCBs (que serão utilizadas nos métodos de id)
 		Collections.sort(processos);
+
+		for (PCB p : processos) {
+			if (p.estado == PCB.Estado.NOVO) {
+				if (listaNovos.contains(p)) {
+					p.estado = PCB.Estado.PRONTO;
+					listaNovos.remove(p);
+					listaProntos.add(p);
+				} else {
+					listaNovos.add(p);
+				}
+			}
+		}
 	}
 
 	@Override
 	protected boolean temTarefasPendentes() {
-		// verificar se há processo em execução ainda
+		// TODO: verificar se há processo em execução ainda
 		return false;
 	}
 
 	@Override
 	protected Integer idProcessoNovo() {
-		// devolve lista com o id dos PCBs em listaNovos
+		// TODO: devolve lista com o id dos PCBs em listaNovos
 		return null;
 	}
 
 	@Override
 	protected List<Integer> idProcessosProntos() {
-		// devolve lista com o id dos PCBs em listaProntos
+		// TODO: devolve lista com o id dos PCBs em listaProntos
 		return null;
 	}
 
 	@Override
 	protected Integer idProcessoExecutando() {
-		// devolve lista com o id dos PCBs em listaExecutando
+		// TODO: devolve lista com o id dos PCBs em listaExecutando
 		return null;
 	}
 
 	@Override
 	protected List<Integer> idProcessosEsperando() {
-		// devolve lista com o id dos PCBs em listaEsperando
+		// TODO: devolve lista com o id dos PCBs em listaEsperando
 		return null;
 	}
 
 	@Override
 	protected List<Integer> idProcessosTerminados() {
-		// devolve lista com o id dos PCBs em listaTerminados
+		// TODO: devolve lista com o id dos PCBs em listaTerminados
 		return null;
 	}
 
 	@Override
 	protected int tempoEsperaMedio() {
-		// utilizado nas estatísticas finais
+		// TODO: utilizado nas estatísticas finais
 		return 0;
 	}
 
 	@Override
 	protected int tempoRespostaMedio() {
-		// utilizado nas estatísticas finais
+		// TODO: utilizado nas estatísticas finais
 		return 0;
 	}
 
 	@Override
 	protected int tempoRetornoMedio() {
-		// utilizado nas estatísticas finais
+		// TODO: utilizado nas estatísticas finais
 		return 0;
 	}
 
