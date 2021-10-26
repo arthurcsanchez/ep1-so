@@ -50,11 +50,16 @@ public class SeuSO extends SO {
 
 	@Override
 	protected OperacaoES proximaOperacaoES(int idDispositivo) {
-		// TODO: buscar próxima operação de ES pelo escalonador definido (a partir de um switch)
-		// TODO: após burst de ES, atualizar estado de PCB para PRONTO
 		switch (escalonadorAtual) {
 			case FIRST_COME_FIRST_SERVED:
-				// TODO: pegar operações do mapa auxiliar a partir do idDispositivo fornecido
+				Map<PCB, OperacaoES> dispositivoAtual = mapaES.get(idDispositivo);
+				for (Map.Entry<PCB, OperacaoES> e : dispositivoAtual.entrySet()) {
+					if (e.getValue().ciclos <= 0) {
+						dispositivoAtual.remove(e.getKey(), e.getValue());
+						continue;
+					}
+					return e.getValue();
+				}
 				break;
 			case SHORTEST_JOB_FIRST:
 				// TODO: caso SJF
