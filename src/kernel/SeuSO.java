@@ -1,4 +1,5 @@
 package kernel;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -48,9 +49,6 @@ public class SeuSO extends SO {
 
 	@Override
 	protected Operacao proximaOperacaoCPU() {
-		// TODO: buscar próxima operação de CPU pelo escalonador definido (a partir de um switch)
-		// TODO: pegar primeiro pcb da lista de processos com estado pronto/execução (a depender do escalonador)
-		// TODO: atualizar contador de programa do pcb
 
 		switch (escalonadorAtual) {
 			case FIRST_COME_FIRST_SERVED:
@@ -123,7 +121,9 @@ public class SeuSO extends SO {
 				}
 				break;
 			case SHORTEST_REMANING_TIME_FIRST:
+				// TODO: caso SRTF
 				break;
+			// TODO: caso RR
 		}
 
 		return null;
@@ -150,38 +150,44 @@ public class SeuSO extends SO {
 
 	@Override
 	protected boolean temTarefasPendentes() {
-		// TODO: verificar se há processo em execução ainda
-		return false;
+		return !listaNovos.isEmpty() || !listaProntos.isEmpty() || !listaEsperando.isEmpty() || !listaExecutando.isEmpty();
 	}
 
 	@Override
 	protected Integer idProcessoNovo() {
-		// TODO: devolve lista com o id dos PCBs em listaNovos
-		return null;
+		return listaNovos.get(listaNovos.size()-1).idProcesso;
 	}
 
 	@Override
 	protected List<Integer> idProcessosProntos() {
-		// TODO: devolve lista com o id dos PCBs em listaProntos
-		return null;
+		List<Integer> resultado = new ArrayList<>();
+		for (PCB p : listaProntos) {
+			resultado.add(p.idProcesso);
+		}
+		return resultado;
 	}
 
 	@Override
 	protected Integer idProcessoExecutando() {
-		// TODO: devolve lista com o id dos PCBs em listaExecutando
-		return null;
+		return listaExecutando.get(listaExecutando.size()-1).idProcesso;
 	}
 
 	@Override
 	protected List<Integer> idProcessosEsperando() {
-		// TODO: devolve lista com o id dos PCBs em listaEsperando
-		return null;
+		List<Integer> resultado = new ArrayList<>();
+		for (PCB p : listaEsperando) {
+			resultado.add(p.idProcesso);
+		}
+		return resultado;
 	}
 
 	@Override
 	protected List<Integer> idProcessosTerminados() {
-		// TODO: devolve lista com o id dos PCBs em listaTerminados
-		return null;
+		List<Integer> resultado = new ArrayList<>();
+		for (PCB p : listaTerminados) {
+			resultado.add(p.idProcesso);
+		}
+		return resultado;
 	}
 
 	@Override

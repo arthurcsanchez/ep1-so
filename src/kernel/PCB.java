@@ -59,6 +59,7 @@ public class PCB implements Comparable<PCB> {
 				else if (this.idProcesso < pcb.idProcesso)
 					return -1;
 				break;
+			// TODO: caso RR
 		}
 		return 0;
 	}
