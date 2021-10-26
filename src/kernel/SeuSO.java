@@ -42,6 +42,7 @@ public class SeuSO extends SO {
 	// Assuma que 0 <= idDispositivo <= 4
 	protected OperacaoES proximaOperacaoES(int idDispositivo) {
 		// TODO: buscar próxima operação de ES pelo escalonador definido (a partir de um switch)
+		// TODO: após burst de ES, atualizar estado de PCB para PRONTO
 		return null;
 	}
 
@@ -86,6 +87,40 @@ public class SeuSO extends SO {
 				}
 				break;
 			case SHORTEST_JOB_FIRST:
+				PCB processoAntigo = null;
+				for (PCB p : processos) {
+					if (p.estado == PCB.Estado.EXECUTANDO) {
+						try {
+							Operacao prox = p.codigo[p.contadorDePrograma++];
+							if (prox instanceof OperacaoES) {
+								p.estado = PCB.Estado.ESPERANDO;
+								listaExecutando.remove(p);
+								listaEsperando.add(p);
+								processoAntigo = p;
+								p.atualizarEstimativaBurstCPU();
+								break;
+							}
+							p.contadorBurstCPU++;
+							return prox;
+						} catch (ArrayIndexOutOfBoundsException e) {
+							p.estado = PCB.Estado.TERMINADO;
+							listaExecutando.remove(p);
+							listaTerminados.add(p);
+							processoAntigo = p;
+							p.atualizarEstimativaBurstCPU();
+							break;
+						}
+					}
+				}
+				for (PCB p : processos) {
+					if (p.estado == PCB.Estado.PRONTO) {
+						p.estado = PCB.Estado.EXECUTANDO;
+						listaProntos.remove(p);
+						listaExecutando.add(p);
+						trocaContexto(processoAntigo, p);
+						return p.codigo[p.contadorDePrograma++];
+					}
+				}
 				break;
 			case SHORTEST_REMANING_TIME_FIRST:
 				break;
