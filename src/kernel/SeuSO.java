@@ -40,10 +40,10 @@ public class SeuSO extends SO {
 	}
 
 	@Override
-	// Assuma que 0 <= idDispositivo <= 4
 	protected OperacaoES proximaOperacaoES(int idDispositivo) {
 		// TODO: buscar próxima operação de ES pelo escalonador definido (a partir de um switch)
 		// TODO: após burst de ES, atualizar estado de PCB para PRONTO
+		// assuma que 0 <= idDispositivo <= 4
 		return null;
 	}
 
@@ -121,7 +121,61 @@ public class SeuSO extends SO {
 				}
 				break;
 			case SHORTEST_REMANING_TIME_FIRST:
-				// TODO: caso SRTF
+				processoAntigo = null;
+				for (PCB p : processos) {
+					if (p.estado == PCB.Estado.EXECUTANDO || p.estado == PCB.Estado.PRONTO) {
+						if (p.estado == PCB.Estado.PRONTO) {
+							for (PCB pAntigo : processos) {
+								if (pAntigo.estado == PCB.Estado.EXECUTANDO) {
+									processoAntigo = pAntigo;
+									break;
+								}
+							}
+							if (processoAntigo != null) {
+								processoAntigo.estado = PCB.Estado.PRONTO;
+								listaExecutando.remove(processoAntigo);
+								listaProntos.add(processoAntigo);
+							}
+							p.estado = PCB.Estado.EXECUTANDO;
+							listaProntos.remove(p);
+							listaExecutando.add(p);
+							trocaContexto(processoAntigo, p);
+						}
+						try {
+							Operacao prox = p.codigo[p.contadorDePrograma++];
+							if (prox instanceof OperacaoES) {
+								p.estado = PCB.Estado.ESPERANDO;
+								listaExecutando.remove(p);
+								listaEsperando.add(p);
+								processoAntigo = p;
+								p.atualizarEstimativaBurstCPU();
+								p.estimativaTempoRestanteBurstCPU = p.estimativaBurstCPU;
+								break;
+							}
+							p.contadorBurstCPU++;
+							p.estimativaTempoRestanteBurstCPU--;
+							return prox;
+						} catch (ArrayIndexOutOfBoundsException e) {
+							p.estado = PCB.Estado.TERMINADO;
+							listaExecutando.remove(p);
+							listaTerminados.add(p);
+							processoAntigo = p;
+							p.atualizarEstimativaBurstCPU();
+							p.estimativaTempoRestanteBurstCPU = p.estimativaBurstCPU;
+							break;
+						}
+					}
+				}
+				for (PCB p : processos) {
+					if (p.estado == PCB.Estado.PRONTO) {
+						p.estado = PCB.Estado.EXECUTANDO;
+						listaProntos.remove(p);
+						listaExecutando.add(p);
+						trocaContexto(processoAntigo, p);
+						p.estimativaTempoRestanteBurstCPU--;
+						return p.codigo[p.contadorDePrograma++];
+					}
+				}
 				break;
 			// TODO: caso RR
 		}

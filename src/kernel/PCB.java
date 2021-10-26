@@ -12,8 +12,8 @@ public class PCB implements Comparable<PCB> {
 	public Operacao[] codigo;
 
 	public int estimativaBurstCPU; // utilizado pelo SJF
-	public int estimativaTempoRestanteBurstCPU; // utilizado pelo SRTF
 	public int contadorBurstCPU; // utilizado para atualizar estimativaBurstCPU e também pelo RR
+	public int estimativaTempoRestanteBurstCPU; // utilizado pelo SRTF
 
 	public int espera; // incrementar a cada ciclo de espera; utilizado no tempoEsperaMedio()
 
@@ -25,7 +25,7 @@ public class PCB implements Comparable<PCB> {
 		this.contadorDePrograma = 0;
 		this.codigo = codigo;
 		this.estimativaBurstCPU = codigo.length;
-		this.estimativaTempoRestanteBurstCPU = this.estimativaBurstCPU;
+		this.estimativaTempoRestanteBurstCPU = codigo.length;
 		this.contadorBurstCPU = 0;
 		this.espera = 0;
 	}
@@ -64,7 +64,7 @@ public class PCB implements Comparable<PCB> {
 		return 0;
 	}
 
-	public void atualizarEstimativaBurstCPU() { // a ser utilizado pelo SJF após fim de burst de CPU
+	public void atualizarEstimativaBurstCPU() { // a ser utilizado pelo SJF e SRTF após fim de burst de CPU
 		this.estimativaBurstCPU = (this.estimativaBurstCPU + this.contadorBurstCPU) / 2;
 		this.contadorBurstCPU = 0;
 	}
