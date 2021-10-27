@@ -39,11 +39,14 @@ public class SeuSO extends SO {
 
 	@Override
 	protected void trocaContexto(PCB pcbAtual, PCB pcbProximo) {
-		// TODO: atualizar para ser compatível com pcbAtual e pcbProximo = null
 		int i = 0;
 		for (int r : processador.registradores) {
-			pcbAtual.registradores[i] = r;
-			processador.registradores[i] = pcbProximo.registradores[i];
+			if (pcbAtual != null)
+				pcbAtual.registradores[i] = r;
+			if (pcbProximo != null)
+				processador.registradores[i] = pcbProximo.registradores[i];
+			else
+				processador.registradores[i] = 0;
 			i++;
 		}
 		numeroTrocasContexto++;
