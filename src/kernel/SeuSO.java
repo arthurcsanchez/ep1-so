@@ -139,6 +139,7 @@ public class SeuSO extends SO {
 
 		for (PCB p : processos) {
 			if (p.estado == PCB.Estado.NOVO) { // verifica a lista em que um processo novo deve ser colocado
+				// TODO problema: quando executa no primeiro ciclo a primeira operação, ela é NOVO, ou seja, proximaOperacaoCPU() devolve null
 				if (listaNovos.contains(p)) {
 					p.estado = PCB.Estado.PRONTO;
 					listaNovos.remove(p);
@@ -188,8 +189,8 @@ public class SeuSO extends SO {
 				} catch (ArrayIndexOutOfBoundsException e) {
 					p.estado = PCB.Estado.TERMINADO;
 					switch (p.estado) {
-						case PRONTO -> listaProntos.remove(p);
-						case EXECUTANDO -> listaExecutando.remove(p);
+						case PRONTO: listaProntos.remove(p); break;
+						case EXECUTANDO: listaExecutando.remove(p); break;
 					}
 					listaTerminados.add(p);
 					p.atualizarEstimativaBurstCPU();
