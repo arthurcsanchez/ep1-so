@@ -39,6 +39,7 @@ public class SeuSO extends SO {
 
 	@Override
 	protected void trocaContexto(PCB pcbAtual, PCB pcbProximo) {
+		// TODO: atualizar para ser compatível com pcbAtual e pcbProximo = null
 		int i = 0;
 		for (int r : processador.registradores) {
 			pcbAtual.registradores[i] = r;
@@ -77,41 +78,35 @@ public class SeuSO extends SO {
 
 		switch (escalonadorAtual) {
 			case FIRST_COME_FIRST_SERVED:
-				PCB processoAntigo = null;
 				for (PCB p : processos) {
 					if (p.estado == PCB.Estado.EXECUTANDO) {
 						try {
-							Operacao prox = p.codigo[p.contadorDePrograma++];
-							if (prox instanceof OperacaoES) {
-								continue; // processador segue para o próximo burst de CPU na lista
-							}
-							return prox;
+							return p.codigo[p.contadorDePrograma++];
 						} catch (ArrayIndexOutOfBoundsException e) {
 							p.estado = PCB.Estado.TERMINADO;
 							listaExecutando.remove(p);
 							listaTerminados.add(p);
-							processoAntigo = p;
-							// processador segue para o próximo burst de CPU na lista
+							trocaContexto(p, null);
 						}
 					} else if (p.estado == PCB.Estado.PRONTO) {
 						p.estado = PCB.Estado.EXECUTANDO;
 						listaProntos.remove(p);
 						listaExecutando.add(p);
-						trocaContexto(processoAntigo, p);
-						Operacao prox = p.codigo[p.contadorDePrograma++];
-						if (prox instanceof OperacaoES) {
-							p.estado = PCB.Estado.ESPERANDO;
+						trocaContexto(null, p);
+						try {
+							return p.codigo[p.contadorDePrograma++];
+						} catch (ArrayIndexOutOfBoundsException e) {
+							p.estado = PCB.Estado.TERMINADO;
 							listaExecutando.remove(p);
-							listaEsperando.add(p);
-							continue; // processador segue para o próximo burst de CPU na lista
+							listaTerminados.add(p);
+							trocaContexto(p, null);
 						}
-						return prox;
 					}
 				}
 				break;
 			case SHORTEST_JOB_FIRST:
 				// TODO: refazer
-				processoAntigo = null;
+				PCB processoAntigo = null;
 				for (PCB p : processos) {
 					if (p.estado == PCB.Estado.EXECUTANDO) {
 						try {
@@ -241,6 +236,7 @@ public class SeuSO extends SO {
 					p.contadorDePrograma += tamBurstES;
 					listaExecutando.remove(p);
 					listaEsperando.add(p);
+					trocaContexto(p, null);
 				}
 			}
 
