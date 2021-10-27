@@ -80,20 +80,14 @@ public class SeuSO extends SO {
 	protected Operacao proximaOperacaoCPU() {
 
 		switch (escalonadorAtual) {
-			case FIRST_COME_FIRST_SERVED: // igual ao SJF
+			case FIRST_COME_FIRST_SERVED: // FCFS e SJF tratados igualmente
+			case SHORTEST_JOB_FIRST:
 				for (PCB p : processos) {
 					if (p.estado == PCB.Estado.EXECUTANDO) {
 						try {
 							p.contadorBurstCPU++;
 							return p.codigo[p.contadorDePrograma++];
-						} catch (ArrayIndexOutOfBoundsException e) {
-							p.contadorBurstCPU--;
-							p.estado = PCB.Estado.TERMINADO;
-							listaExecutando.remove(p);
-							listaTerminados.add(p);
-							p.atualizarEstimativaBurstCPU();
-							trocaContexto(p, null);
-						}
+						} catch (ArrayIndexOutOfBoundsException ignored) {}
 					} else if (p.estado == PCB.Estado.PRONTO) {
 						p.estado = PCB.Estado.EXECUTANDO;
 						listaProntos.remove(p);
@@ -102,51 +96,11 @@ public class SeuSO extends SO {
 						try {
 							p.contadorBurstCPU++;
 							return p.codigo[p.contadorDePrograma++];
-						} catch (ArrayIndexOutOfBoundsException e) {
-							p.contadorBurstCPU--;
-							p.estado = PCB.Estado.TERMINADO;
-							listaExecutando.remove(p);
-							listaTerminados.add(p);
-							p.atualizarEstimativaBurstCPU();
-							trocaContexto(p, null);
-						}
+						} catch (ArrayIndexOutOfBoundsException ignored) {}
 					}
 				}
 				break;
-			case SHORTEST_JOB_FIRST: // igual ao FCFS
-				for (PCB p : processos) {
-					if (p.estado == PCB.Estado.EXECUTANDO) {
-						try {
-							p.contadorBurstCPU++;
-							return p.codigo[p.contadorDePrograma++];
-						} catch (ArrayIndexOutOfBoundsException e) {
-							p.contadorBurstCPU--;
-							p.estado = PCB.Estado.TERMINADO;
-							listaExecutando.remove(p);
-							listaTerminados.add(p);
-							p.atualizarEstimativaBurstCPU();
-							trocaContexto(p, null);
-						}
-					} else if (p.estado == PCB.Estado.PRONTO) {
-						p.estado = PCB.Estado.EXECUTANDO;
-						listaProntos.remove(p);
-						listaExecutando.add(p);
-						trocaContexto(null, p);
-						try {
-							p.contadorBurstCPU++;
-							return p.codigo[p.contadorDePrograma++];
-						} catch (ArrayIndexOutOfBoundsException e) {
-							p.contadorBurstCPU--;
-							p.estado = PCB.Estado.TERMINADO;
-							listaExecutando.remove(p);
-							listaTerminados.add(p);
-							p.atualizarEstimativaBurstCPU();
-							trocaContexto(p, null);
-						}
-					}
-				}
-				break;
-			case SHORTEST_REMANING_TIME_FIRST: // pouco diferente do FCFS e do SJF
+			case SHORTEST_REMANING_TIME_FIRST: // um pouco diferente do FCFS e do SJF
 				for (PCB p : processos) {
 					if (p.estado == PCB.Estado.EXECUTANDO || p.estado == PCB.Estado.PRONTO) {
 						if (p.estado == PCB.Estado.PRONTO) {
@@ -169,15 +123,7 @@ public class SeuSO extends SO {
 							p.contadorBurstCPU++;
 							p.estimativaTempoRestanteBurstCPU--;
 							return p.codigo[p.contadorDePrograma++];
-						} catch (ArrayIndexOutOfBoundsException e) {
-							p.contadorBurstCPU--;
-							p.estimativaTempoRestanteBurstCPU++;
-							p.estado = PCB.Estado.TERMINADO;
-							listaExecutando.remove(p);
-							listaTerminados.add(p);
-							p.atualizarEstimativaBurstCPU();
-							trocaContexto(p, null);
-						}
+						} catch (ArrayIndexOutOfBoundsException ignored) {}
 					}
 				}
 				break;
@@ -192,7 +138,7 @@ public class SeuSO extends SO {
 		Collections.sort(processos);
 
 		for (PCB p : processos) {
-			if (p.estado == PCB.Estado.NOVO) {
+			if (p.estado == PCB.Estado.NOVO) { // verifica a lista em que um processo novo deve ser colocado
 				if (listaNovos.contains(p)) {
 					p.estado = PCB.Estado.PRONTO;
 					listaNovos.remove(p);
@@ -233,6 +179,21 @@ public class SeuSO extends SO {
 				p.estado = PCB.Estado.PRONTO;
 				listaEsperando.remove(p);
 				listaProntos.add(p);
+			}
+
+			if (p.estado == PCB.Estado.PRONTO || p.estado == PCB.Estado.EXECUTANDO) { // verifica se processo já acabou
+				try {
+					Operacao teste = p.codigo[p.contadorDePrograma];
+				} catch (ArrayIndexOutOfBoundsException e) {
+					p.estado = PCB.Estado.TERMINADO;
+					switch (p.estado) {
+						case PRONTO -> listaProntos.remove(p);
+						case EXECUTANDO -> listaExecutando.remove(p);
+					}
+					listaTerminados.add(p);
+					p.atualizarEstimativaBurstCPU();
+					trocaContexto(p, null);
+				}
 			}
 		}
 	}
