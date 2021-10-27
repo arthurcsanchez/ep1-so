@@ -83,9 +83,6 @@ public class SeuSO extends SO {
 						try {
 							Operacao prox = p.codigo[p.contadorDePrograma++];
 							if (prox instanceof OperacaoES) {
-								p.estado = PCB.Estado.ESPERANDO;
-								listaExecutando.remove(p);
-								listaEsperando.add(p);
 								continue; // processador segue para o próximo burst de CPU na lista
 							}
 							return prox;
@@ -113,6 +110,7 @@ public class SeuSO extends SO {
 				}
 				break;
 			case SHORTEST_JOB_FIRST:
+				// TODO: refazer
 				processoAntigo = null;
 				for (PCB p : processos) {
 					if (p.estado == PCB.Estado.EXECUTANDO) {
@@ -149,6 +147,7 @@ public class SeuSO extends SO {
 				}
 				break;
 			case SHORTEST_REMANING_TIME_FIRST:
+				// TODO: refazer
 				processoAntigo = null;
 				for (PCB p : processos) {
 					if (p.estado == PCB.Estado.EXECUTANDO || p.estado == PCB.Estado.PRONTO) {
@@ -226,10 +225,21 @@ public class SeuSO extends SO {
 				}
 			}
 
+			int tamBurstES;
 			if (p.estado == PCB.Estado.PRONTO) {
-				if (atualizaMapaES(p) > 0) { // se há burst de ES onde o contador de programa está posicionado
+				tamBurstES = atualizaMapaES(p);
+				if (tamBurstES > 0) { // se há burst de ES onde o contador de programa está posicionado
 					p.estado = PCB.Estado.ESPERANDO;
+					p.contadorDePrograma += tamBurstES;
 					listaProntos.remove(p);
+					listaEsperando.add(p);
+				}
+			} else if (p.estado == PCB.Estado.EXECUTANDO) {
+				tamBurstES = atualizaMapaES(p);
+				if (tamBurstES > 0) { // se há burst de ES onde o contador de programa está posicionado
+					p.estado = PCB.Estado.ESPERANDO;
+					p.contadorDePrograma += tamBurstES;
+					listaExecutando.remove(p);
 					listaEsperando.add(p);
 				}
 			}
