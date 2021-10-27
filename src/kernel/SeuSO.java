@@ -80,15 +80,18 @@ public class SeuSO extends SO {
 	protected Operacao proximaOperacaoCPU() {
 
 		switch (escalonadorAtual) {
-			case FIRST_COME_FIRST_SERVED:
+			case FIRST_COME_FIRST_SERVED: // igual ao SJF
 				for (PCB p : processos) {
 					if (p.estado == PCB.Estado.EXECUTANDO) {
 						try {
+							p.contadorBurstCPU++;
 							return p.codigo[p.contadorDePrograma++];
 						} catch (ArrayIndexOutOfBoundsException e) {
+							p.contadorBurstCPU--;
 							p.estado = PCB.Estado.TERMINADO;
 							listaExecutando.remove(p);
 							listaTerminados.add(p);
+							p.atualizarEstimativaBurstCPU();
 							trocaContexto(p, null);
 						}
 					} else if (p.estado == PCB.Estado.PRONTO) {
@@ -97,56 +100,55 @@ public class SeuSO extends SO {
 						listaExecutando.add(p);
 						trocaContexto(null, p);
 						try {
+							p.contadorBurstCPU++;
 							return p.codigo[p.contadorDePrograma++];
 						} catch (ArrayIndexOutOfBoundsException e) {
+							p.contadorBurstCPU--;
 							p.estado = PCB.Estado.TERMINADO;
 							listaExecutando.remove(p);
 							listaTerminados.add(p);
+							p.atualizarEstimativaBurstCPU();
 							trocaContexto(p, null);
 						}
 					}
 				}
 				break;
-			case SHORTEST_JOB_FIRST:
-				// TODO: refazer
-				PCB processoAntigo = null;
+			case SHORTEST_JOB_FIRST: // igual ao FCFS
 				for (PCB p : processos) {
 					if (p.estado == PCB.Estado.EXECUTANDO) {
 						try {
-							Operacao prox = p.codigo[p.contadorDePrograma++];
-							if (prox instanceof OperacaoES) {
-								p.estado = PCB.Estado.ESPERANDO;
-								listaExecutando.remove(p);
-								listaEsperando.add(p);
-								processoAntigo = p;
-								p.atualizarEstimativaBurstCPU();
-								break;
-							}
 							p.contadorBurstCPU++;
-							return prox;
+							return p.codigo[p.contadorDePrograma++];
 						} catch (ArrayIndexOutOfBoundsException e) {
+							p.contadorBurstCPU--;
 							p.estado = PCB.Estado.TERMINADO;
 							listaExecutando.remove(p);
 							listaTerminados.add(p);
-							processoAntigo = p;
 							p.atualizarEstimativaBurstCPU();
-							break;
+							trocaContexto(p, null);
 						}
-					}
-				}
-				for (PCB p : processos) {
-					if (p.estado == PCB.Estado.PRONTO) {
+					} else if (p.estado == PCB.Estado.PRONTO) {
 						p.estado = PCB.Estado.EXECUTANDO;
 						listaProntos.remove(p);
 						listaExecutando.add(p);
-						trocaContexto(processoAntigo, p);
-						return p.codigo[p.contadorDePrograma++];
+						trocaContexto(null, p);
+						try {
+							p.contadorBurstCPU++;
+							return p.codigo[p.contadorDePrograma++];
+						} catch (ArrayIndexOutOfBoundsException e) {
+							p.contadorBurstCPU--;
+							p.estado = PCB.Estado.TERMINADO;
+							listaExecutando.remove(p);
+							listaTerminados.add(p);
+							p.atualizarEstimativaBurstCPU();
+							trocaContexto(p, null);
+						}
 					}
 				}
 				break;
 			case SHORTEST_REMANING_TIME_FIRST:
 				// TODO: refazer
-				processoAntigo = null;
+				PCB processoAntigo = null;
 				for (PCB p : processos) {
 					if (p.estado == PCB.Estado.EXECUTANDO || p.estado == PCB.Estado.PRONTO) {
 						if (p.estado == PCB.Estado.PRONTO) {
@@ -239,6 +241,7 @@ public class SeuSO extends SO {
 					p.contadorDePrograma += tamBurstES;
 					listaExecutando.remove(p);
 					listaEsperando.add(p);
+					p.atualizarEstimativaBurstCPU();
 					trocaContexto(p, null);
 				}
 			}
