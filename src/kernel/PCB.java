@@ -1,5 +1,6 @@
 package kernel;
 import operacoes.Operacao;
+import java.util.Objects;
 
 public class PCB implements Comparable<PCB> {
 
@@ -15,6 +16,10 @@ public class PCB implements Comparable<PCB> {
 	public int contadorBurstCPU; // utilizado para atualizar estimativaBurstCPU e também pelo RR
 	public int estimativaTempoRestanteBurstCPU; // utilizado pelo SRTF
 
+	public int estimativaBurstES;
+	public int contadorBurstES;
+	public int estimativaTempoRestanteBurstES;
+
 	public int espera; // incrementar a cada ciclo de espera; utilizado no tempoEsperaMedio()
 
 	public PCB(SO.Escalonador escalonadorAtual, int idProcesso, Operacao[] codigo) {
@@ -24,9 +29,15 @@ public class PCB implements Comparable<PCB> {
 		this.registradores = new int[5];
 		this.contadorDePrograma = 0;
 		this.codigo = codigo;
+
 		this.estimativaBurstCPU = codigo.length;
 		this.estimativaTempoRestanteBurstCPU = codigo.length;
 		this.contadorBurstCPU = 0;
+
+		this.estimativaBurstES = codigo.length;
+		this.estimativaTempoRestanteBurstES = codigo.length;
+		this.contadorBurstES = 0;
+
 		this.espera = 0;
 	}
 
@@ -40,6 +51,16 @@ public class PCB implements Comparable<PCB> {
 					return -1;
 				break;
 			case SHORTEST_JOB_FIRST:
+				if (this.estado == Estado.ESPERANDO) {
+					if (this.estimativaBurstES > pcb.estimativaBurstES)
+						return 1;
+					else if (this.estimativaBurstES < pcb.estimativaBurstES)
+						return -1;
+					else if (this.idProcesso > pcb.idProcesso)
+						return 1;
+					else if (this.idProcesso < pcb.idProcesso)
+						return -1;
+				}
 				if (this.estimativaBurstCPU > pcb.estimativaBurstCPU)
 					return 1;
 				else if (this.estimativaBurstCPU < pcb.estimativaBurstCPU)
@@ -50,6 +71,16 @@ public class PCB implements Comparable<PCB> {
 					return -1;
 				break;
 			case SHORTEST_REMANING_TIME_FIRST:
+				if (this.estado == Estado.ESPERANDO) {
+					if (this.estimativaTempoRestanteBurstES > pcb.estimativaTempoRestanteBurstES)
+						return 1;
+					else if (this.estimativaTempoRestanteBurstES < pcb.estimativaTempoRestanteBurstES)
+						return -1;
+					else if (this.idProcesso > pcb.idProcesso)
+						return 1;
+					else if (this.idProcesso < pcb.idProcesso)
+						return -1;
+				}
 				if (this.estimativaTempoRestanteBurstCPU > pcb.estimativaTempoRestanteBurstCPU)
 					return 1;
 				else if (this.estimativaTempoRestanteBurstCPU < pcb.estimativaTempoRestanteBurstCPU)
@@ -64,10 +95,29 @@ public class PCB implements Comparable<PCB> {
 		return 0;
 	}
 
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		PCB pcb = (PCB) o;
+		return idProcesso == pcb.idProcesso && escalonadorAtual == pcb.escalonadorAtual;
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(escalonadorAtual, idProcesso);
+	}
+
 	public void atualizarEstimativaBurstCPU() { // a ser utilizado pelo SJF e SRTF após fim de burst de CPU
 		this.estimativaBurstCPU = (this.estimativaBurstCPU + this.contadorBurstCPU) / 2;
 		this.contadorBurstCPU = 0;
 		this.estimativaTempoRestanteBurstCPU = this.estimativaBurstCPU;
+	}
+
+	public void atualizarEstimativaBurstES() { // a ser utilizado pelo SJF e SRTF após fim de burst de CPU
+		this.estimativaBurstES = (this.estimativaBurstES + this.contadorBurstES) / 2;
+		this.contadorBurstES = 0;
+		this.estimativaTempoRestanteBurstES = this.estimativaBurstES;
 	}
 
 }

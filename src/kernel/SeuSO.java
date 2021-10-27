@@ -24,11 +24,11 @@ public class SeuSO extends SO {
 	public Map<Integer, Map<PCB, OperacaoES>> mapaES = new HashMap<>();
 
 	public SeuSO() {
-		mapaES.put(0, new LinkedHashMap<>());
-		mapaES.put(1, new LinkedHashMap<>());
-		mapaES.put(2, new LinkedHashMap<>());
-		mapaES.put(3, new LinkedHashMap<>());
-		mapaES.put(4, new LinkedHashMap<>());
+		mapaES.put(0, new TreeMap<>());
+		mapaES.put(1, new TreeMap<>());
+		mapaES.put(2, new TreeMap<>());
+		mapaES.put(3, new TreeMap<>());
+		mapaES.put(4, new TreeMap<>());
 	}
 
 	@Override
@@ -56,20 +56,18 @@ public class SeuSO extends SO {
 	protected OperacaoES proximaOperacaoES(int idDispositivo) {
 		switch (escalonadorAtual) {
 			case FIRST_COME_FIRST_SERVED:
+			case SHORTEST_JOB_FIRST:
+			case SHORTEST_REMANING_TIME_FIRST:
 				Map<PCB, OperacaoES> dispositivoAtual = mapaES.get(idDispositivo);
 				for (Map.Entry<PCB, OperacaoES> e : dispositivoAtual.entrySet()) {
 					if (e.getValue().ciclos <= 0) {
 						dispositivoAtual.remove(e.getKey(), e.getValue());
 						continue;
 					}
+					e.getKey().contadorBurstES++;
+					e.getKey().estimativaTempoRestanteBurstES--;
 					return e.getValue();
 				}
-				break;
-			case SHORTEST_JOB_FIRST:
-				// TODO: caso SJF
-				break;
-			case SHORTEST_REMANING_TIME_FIRST:
-				// TODO: caso SRTF
 				break;
 			// TODO: caso RR
 		}
@@ -86,6 +84,7 @@ public class SeuSO extends SO {
 					if (p.estado == PCB.Estado.EXECUTANDO) {
 						try {
 							p.contadorBurstCPU++;
+							p.estimativaTempoRestanteBurstCPU--;
 							return p.codigo[p.contadorDePrograma++];
 						} catch (ArrayIndexOutOfBoundsException ignored) {}
 					} else if (p.estado == PCB.Estado.PRONTO) {
@@ -95,6 +94,7 @@ public class SeuSO extends SO {
 						trocaContexto(null, p);
 						try {
 							p.contadorBurstCPU++;
+							p.estimativaTempoRestanteBurstCPU--;
 							return p.codigo[p.contadorDePrograma++];
 						} catch (ArrayIndexOutOfBoundsException ignored) {}
 					}
@@ -179,6 +179,7 @@ public class SeuSO extends SO {
 				p.estado = PCB.Estado.PRONTO;
 				listaEsperando.remove(p);
 				listaProntos.add(p);
+				p.atualizarEstimativaBurstES();
 			}
 
 			if (p.estado == PCB.Estado.PRONTO || p.estado == PCB.Estado.EXECUTANDO) { // verifica se processo já acabou
@@ -196,6 +197,8 @@ public class SeuSO extends SO {
 				}
 			}
 		}
+
+		Collections.sort(processos);
 	}
 
 	@Override
