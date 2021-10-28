@@ -60,9 +60,10 @@ public class SeuSO extends SO {
 			case SHORTEST_REMANING_TIME_FIRST:
 				Map<PCB, OperacaoES> dispositivoAtual = mapaES.get(idDispositivo);
 				for (Map.Entry<PCB, OperacaoES> e : dispositivoAtual.entrySet()) {
-					if (e.getValue().ciclos <= 0) {
+					if (e.getValue().ciclos <= 1) {
 						dispositivoAtual.remove(e.getKey(), e.getValue());
-						continue;
+						if (e.getValue().ciclos <= 0)
+							continue;
 					}
 					e.getKey().contadorBurstES++;
 					e.getKey().estimativaTempoRestanteBurstES--;
@@ -139,7 +140,6 @@ public class SeuSO extends SO {
 
 		for (PCB p : processos) {
 			if (p.estado == PCB.Estado.NOVO) { // verifica a lista em que um processo novo deve ser colocado
-				// TODO problema: quando executa no primeiro ciclo a primeira operação, ela é NOVO, ou seja, proximaOperacaoCPU() devolve null
 				if (listaNovos.contains(p)) {
 					p.estado = PCB.Estado.PRONTO;
 					listaNovos.remove(p);
@@ -171,27 +171,31 @@ public class SeuSO extends SO {
 			}
 
 			if (p.estado == PCB.Estado.ESPERANDO) {
+				boolean check = true;
 				for (Map.Entry<Integer, Map<PCB, OperacaoES>> m : mapaES.entrySet()) {
 					if (m.getValue().containsKey(p)) {
 						p.espera++;
-						return; // ainda há operações no burst de ES inserido no mapa auxiliar
+						check = false;
+						break; // ainda há operações no burst de ES inserido no mapa auxiliar
 					}
 				}
-				p.estado = PCB.Estado.PRONTO;
-				listaEsperando.remove(p);
-				listaProntos.add(p);
-				p.atualizarEstimativaBurstES();
+				if (check) {
+					p.estado = PCB.Estado.PRONTO;
+					listaEsperando.remove(p);
+					listaProntos.add(p);
+					p.atualizarEstimativaBurstES();
+				}
 			}
 
 			if (p.estado == PCB.Estado.PRONTO || p.estado == PCB.Estado.EXECUTANDO) { // verifica se processo já acabou
 				try {
 					Operacao teste = p.codigo[p.contadorDePrograma];
 				} catch (ArrayIndexOutOfBoundsException e) {
-					p.estado = PCB.Estado.TERMINADO;
 					switch (p.estado) {
 						case PRONTO: listaProntos.remove(p); break;
 						case EXECUTANDO: listaExecutando.remove(p); break;
 					}
+					p.estado = PCB.Estado.TERMINADO;
 					listaTerminados.add(p);
 					p.atualizarEstimativaBurstCPU();
 					trocaContexto(p, null);
@@ -209,7 +213,11 @@ public class SeuSO extends SO {
 
 	@Override
 	protected Integer idProcessoNovo() {
-		return listaNovos.get(listaNovos.size()-1).idProcesso;
+		try {
+			return listaNovos.get(listaNovos.size()-1).idProcesso;
+		} catch (IndexOutOfBoundsException e) {
+			return null;
+		}
 	}
 
 	@Override
@@ -223,7 +231,11 @@ public class SeuSO extends SO {
 
 	@Override
 	protected Integer idProcessoExecutando() {
-		return listaExecutando.get(listaExecutando.size()-1).idProcesso;
+		try {
+			return listaExecutando.get(listaExecutando.size()-1).idProcesso;
+		} catch (IndexOutOfBoundsException e) {
+			return null;
+		}
 	}
 
 	@Override

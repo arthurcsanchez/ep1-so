@@ -89,6 +89,7 @@ public abstract class SO {
 
 	private void executaUmCicloCPU() {
 		Operacao op = proximaOperacaoCPU();
+		if (op == null) return; // TODO linha adicionada; verificar se pode
 		processador.executa(op);
 	}
 
