@@ -89,6 +89,7 @@ public class SeuSO extends SO {
 							return p.codigo[p.contadorDePrograma++];
 						} catch (ArrayIndexOutOfBoundsException ignored) {}
 					} else if (p.estado == PCB.Estado.PRONTO) {
+						p.jaObteveRespostaCPU = true;
 						p.estado = PCB.Estado.EXECUTANDO;
 						listaProntos.remove(p);
 						listaExecutando.add(p);
@@ -115,6 +116,7 @@ public class SeuSO extends SO {
 									break;
 								}
 							}
+							p.jaObteveRespostaCPU = true;
 							p.estado = PCB.Estado.EXECUTANDO;
 							listaProntos.remove(p);
 							listaExecutando.add(p);
@@ -136,6 +138,23 @@ public class SeuSO extends SO {
 
 	@Override
 	protected void executaCicloKernel() {
+
+		for (PCB p : processos) { // TODO: alterar a posição disto (talvez esteja contabilizando 1 a mais nesta posição)
+			switch (p.estado) { // contabiliza tempos
+				case EXECUTANDO:
+					p.tempoCPU++;
+					break;
+				case PRONTO:
+					p.tempoEspera++;
+					break;
+				case ESPERANDO:
+					p.tempoES++;
+					break;
+			}
+			if (!p.jaObteveRespostaCPU)
+				p.tempoResposta++;
+		}
+
 		Collections.sort(processos);
 
 		for (PCB p : processos) {
@@ -174,7 +193,6 @@ public class SeuSO extends SO {
 				boolean check = true;
 				for (Map.Entry<Integer, Map<PCB, OperacaoES>> m : mapaES.entrySet()) {
 					if (m.getValue().containsKey(p)) {
-						p.espera++;
 						check = false;
 						break; // ainda há operações no burst de ES inserido no mapa auxiliar
 					}
@@ -258,20 +276,31 @@ public class SeuSO extends SO {
 
 	@Override
 	protected int tempoEsperaMedio() {
-		// TODO: utilizado nas estatísticas finais
-		return 0;
+		int tempoTotal = 0;
+		for (PCB p : processos) {
+			tempoTotal += p.tempoEspera;
+		}
+		return (tempoTotal / processos.size());
 	}
 
 	@Override
 	protected int tempoRespostaMedio() {
-		// TODO: utilizado nas estatísticas finais
-		return 0;
+		int tempoTotal = 0;
+		for (PCB p : processos) {
+			tempoTotal += p.tempoResposta;
+		}
+		return (tempoTotal / processos.size());
 	}
 
 	@Override
 	protected int tempoRetornoMedio() {
-		// TODO: utilizado nas estatísticas finais
-		return 0;
+		int tempoTotal = 0;
+		for (PCB p : processos) {
+			tempoTotal += p.tempoEspera;
+			tempoTotal += p.tempoCPU;
+			tempoTotal += p.tempoES;
+		}
+		return (tempoTotal / processos.size());
 	}
 
 	@Override

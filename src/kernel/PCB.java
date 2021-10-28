@@ -20,7 +20,12 @@ public class PCB implements Comparable<PCB> {
 	public int contadorBurstES;
 	public int estimativaTempoRestanteBurstES;
 
-	public int espera; // incrementar a cada ciclo de espera; utilizado no tempoEsperaMedio()
+	public boolean jaObteveRespostaCPU;
+
+	public int tempoEspera; // incrementar a cada ciclo de pronto
+	public int tempoCPU; // incrementar a cada ciclo de executando
+	public int tempoES; // incrementar a cada ciclo de esperando
+	public int tempoResposta; // tempo até primeiro ciclo de executando
 
 	public PCB(SO.Escalonador escalonadorAtual, int idProcesso, Operacao[] codigo) {
 		this.escalonadorAtual = escalonadorAtual;
@@ -38,7 +43,12 @@ public class PCB implements Comparable<PCB> {
 		this.estimativaTempoRestanteBurstES = codigo.length;
 		this.contadorBurstES = 0;
 
-		this.espera = 0;
+		this.jaObteveRespostaCPU = false;
+
+		this.tempoEspera = 0;
+		this.tempoCPU = 0;
+		this.tempoES = 0;
+		this.tempoResposta = 0;
 	}
 
 	@Override
