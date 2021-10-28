@@ -12,6 +12,7 @@ public class SeuSO extends SO {
 	private int contadorProcessos = 0;
 	public Escalonador escalonadorAtual;
 	public List<PCB> processos = new LinkedList<>();
+	public int contadorOperacoesES = 0;
 
 	// listas auxiliares SO
 	public List<PCB> listaNovos = new LinkedList<>();
@@ -54,6 +55,27 @@ public class SeuSO extends SO {
 
 	@Override
 	protected OperacaoES proximaOperacaoES(int idDispositivo) {
+
+		contadorOperacoesES++;
+		if (contadorOperacoesES == 5) { // contabiliza tempos (está aqui pois este é o último método executado no ciclo)
+			contadorOperacoesES = 0;
+			for (PCB p : processos) {
+				switch (p.estado) {
+					case EXECUTANDO:
+						p.tempoCPU++;
+						break;
+					case PRONTO:
+						p.tempoEspera++;
+						break;
+					case ESPERANDO:
+						p.tempoES++;
+						break;
+				}
+				if (!p.jaObteveRespostaCPU)
+					p.tempoResposta++;
+			}
+		}
+
 		switch (escalonadorAtual) {
 			case FIRST_COME_FIRST_SERVED:
 			case SHORTEST_JOB_FIRST:
@@ -138,22 +160,6 @@ public class SeuSO extends SO {
 
 	@Override
 	protected void executaCicloKernel() {
-
-		for (PCB p : processos) { // TODO: alterar a posição disto (talvez esteja contabilizando 1 a mais nesta posição)
-			switch (p.estado) { // contabiliza tempos
-				case EXECUTANDO:
-					p.tempoCPU++;
-					break;
-				case PRONTO:
-					p.tempoEspera++;
-					break;
-				case ESPERANDO:
-					p.tempoES++;
-					break;
-			}
-			if (!p.jaObteveRespostaCPU)
-				p.tempoResposta++;
-		}
 
 		Collections.sort(processos);
 
