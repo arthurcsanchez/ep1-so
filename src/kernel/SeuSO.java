@@ -1,4 +1,5 @@
 package kernel;
+import java.time.LocalTime;
 import java.util.*;
 
 import operacoes.Carrega;
@@ -55,7 +56,6 @@ public class SeuSO extends SO {
 
 	@Override
 	protected OperacaoES proximaOperacaoES(int idDispositivo) {
-
 		contadorOperacoesES++;
 		if (contadorOperacoesES == 5) { // contabiliza tempos (está aqui pois este é o último método executado no ciclo)
 			contadorOperacoesES = 0;
@@ -81,16 +81,23 @@ public class SeuSO extends SO {
 			case SHORTEST_JOB_FIRST:
 			case SHORTEST_REMANING_TIME_FIRST:
 				Map<PCB, OperacaoES> dispositivoAtual = mapaES.get(idDispositivo);
+				Map.Entry<PCB, OperacaoES> resultado = null;
+				List<Map.Entry<PCB, OperacaoES>> entradasRemover = new LinkedList<>();
 				for (Map.Entry<PCB, OperacaoES> e : dispositivoAtual.entrySet()) {
 					if (e.getValue().ciclos <= 1) {
-						dispositivoAtual.remove(e.getKey(), e.getValue());
+						entradasRemover.add(e);
 						if (e.getValue().ciclos <= 0)
 							continue;
 					}
 					e.getKey().contadorBurstES++;
 					e.getKey().estimativaTempoRestanteBurstES--;
-					return e.getValue();
+					resultado = e;
+					break;
 				}
+				for (Map.Entry<PCB, OperacaoES> e : entradasRemover)
+					dispositivoAtual.remove(e.getKey(), e.getValue());
+				if (resultado != null)
+					return resultado.getValue();
 				break;
 			// TODO: caso RR
 		}
@@ -133,6 +140,7 @@ public class SeuSO extends SO {
 									pAntigo.estado = PCB.Estado.PRONTO;
 									listaExecutando.remove(pAntigo);
 									listaProntos.add(pAntigo);
+									pAntigo.chegadaFilaPronto = LocalTime.now();
 									pAntigo.atualizarEstimativaBurstCPU();
 									trocaContexto(pAntigo, null);
 									break;
@@ -169,6 +177,7 @@ public class SeuSO extends SO {
 					p.estado = PCB.Estado.PRONTO;
 					listaNovos.remove(p);
 					listaProntos.add(p);
+					p.chegadaFilaPronto = LocalTime.now();
 				} else {
 					listaNovos.add(p);
 				}
@@ -207,6 +216,7 @@ public class SeuSO extends SO {
 					p.estado = PCB.Estado.PRONTO;
 					listaEsperando.remove(p);
 					listaProntos.add(p);
+					p.chegadaFilaPronto = LocalTime.now();
 					p.atualizarEstimativaBurstES();
 				}
 			}

@@ -1,5 +1,6 @@
 package kernel;
 import operacoes.Operacao;
+import java.time.LocalTime;
 import java.util.Objects;
 
 public class PCB implements Comparable<PCB> {
@@ -11,6 +12,7 @@ public class PCB implements Comparable<PCB> {
 	public int[] registradores; // guarda estado dos registradores do processador na troca de contexto
 	public int contadorDePrograma;
 	public Operacao[] codigo;
+	public LocalTime chegadaFilaPronto;
 
 	public int estimativaBurstCPU; // utilizado pelo SJF
 	public int contadorBurstCPU; // utilizado para atualizar estimativaBurstCPU e também pelo RR
@@ -34,6 +36,7 @@ public class PCB implements Comparable<PCB> {
 		this.registradores = new int[5];
 		this.contadorDePrograma = 0;
 		this.codigo = codigo;
+		chegadaFilaPronto = LocalTime.now();
 
 		this.estimativaBurstCPU = codigo.length;
 		this.estimativaTempoRestanteBurstCPU = codigo.length;
@@ -55,7 +58,11 @@ public class PCB implements Comparable<PCB> {
 	public int compareTo(PCB pcb) {
 		switch (escalonadorAtual) {
 			case FIRST_COME_FIRST_SERVED:
-				if (this.idProcesso > pcb.idProcesso)
+				if (this.chegadaFilaPronto.isAfter(pcb.chegadaFilaPronto))
+					return 1;
+				else if (this.chegadaFilaPronto.isBefore(pcb.chegadaFilaPronto))
+					return -1;
+				else if (this.idProcesso > pcb.idProcesso)
 					return 1;
 				else if (this.idProcesso < pcb.idProcesso)
 					return -1;
