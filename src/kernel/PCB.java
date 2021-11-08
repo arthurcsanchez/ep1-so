@@ -36,7 +36,7 @@ public class PCB implements Comparable<PCB> {
 		this.registradores = new int[5];
 		this.contadorDePrograma = 0;
 		this.codigo = codigo;
-		chegadaFilaPronto = LocalTime.now();
+		this.chegadaFilaPronto = LocalTime.now();
 
 		this.estimativaBurstCPU = codigo.length;
 		this.estimativaTempoRestanteBurstCPU = codigo.length;
@@ -57,6 +57,7 @@ public class PCB implements Comparable<PCB> {
 	@Override
 	public int compareTo(PCB pcb) {
 		switch (escalonadorAtual) {
+			case ROUND_ROBIN_QUANTUM_5:
 			case FIRST_COME_FIRST_SERVED:
 				if (this.chegadaFilaPronto.isAfter(pcb.chegadaFilaPronto))
 					return 1;
@@ -107,7 +108,6 @@ public class PCB implements Comparable<PCB> {
 				else if (this.idProcesso < pcb.idProcesso)
 					return -1;
 				break;
-			// TODO: caso RR
 		}
 		return 0;
 	}

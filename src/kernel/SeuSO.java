@@ -75,32 +75,24 @@ public class SeuSO extends SO {
 					p.tempoResposta++;
 			}
 		}
-
-		switch (escalonadorAtual) {
-			case FIRST_COME_FIRST_SERVED:
-			case SHORTEST_JOB_FIRST:
-			case SHORTEST_REMANING_TIME_FIRST:
-				Map<PCB, OperacaoES> dispositivoAtual = mapaES.get(idDispositivo);
-				Map.Entry<PCB, OperacaoES> resultado = null;
-				List<Map.Entry<PCB, OperacaoES>> entradasRemover = new LinkedList<>();
-				for (Map.Entry<PCB, OperacaoES> e : dispositivoAtual.entrySet()) {
-					if (e.getValue().ciclos <= 1) {
-						entradasRemover.add(e);
-						if (e.getValue().ciclos <= 0)
-							continue;
-					}
-					e.getKey().contadorBurstES++;
-					e.getKey().estimativaTempoRestanteBurstES--;
-					resultado = e;
-					break;
-				}
-				for (Map.Entry<PCB, OperacaoES> e : entradasRemover)
-					dispositivoAtual.remove(e.getKey(), e.getValue());
-				if (resultado != null)
-					return resultado.getValue();
-				break;
-			// TODO: caso RR
+		Map<PCB, OperacaoES> dispositivoAtual = mapaES.get(idDispositivo);
+		Map.Entry<PCB, OperacaoES> resultado = null;
+		List<Map.Entry<PCB, OperacaoES>> entradasRemover = new LinkedList<>();
+		for (Map.Entry<PCB, OperacaoES> e : dispositivoAtual.entrySet()) {
+			if (e.getValue().ciclos <= 1) {
+				entradasRemover.add(e);
+				if (e.getValue().ciclos <= 0)
+					continue;
+			}
+			e.getKey().contadorBurstES++;
+			e.getKey().estimativaTempoRestanteBurstES--;
+			resultado = e;
+			break;
 		}
+		for (Map.Entry<PCB, OperacaoES> e : entradasRemover)
+			dispositivoAtual.remove(e.getKey(), e.getValue());
+		if (resultado != null)
+			return resultado.getValue();
 		return null;
 	}
 
@@ -160,7 +152,36 @@ public class SeuSO extends SO {
 					}
 				}
 				break;
-			// TODO: caso RR
+			case ROUND_ROBIN_QUANTUM_5:
+				for (PCB p : processos) {
+					if (p.estado == PCB.Estado.EXECUTANDO) {
+						if (p.contadorBurstCPU >= 5) {
+							p.estado = PCB.Estado.PRONTO;
+							listaExecutando.remove(p);
+							listaProntos.add(p);
+							p.chegadaFilaPronto = LocalTime.now();
+							p.atualizarEstimativaBurstCPU();
+							continue;
+						}
+						try {
+							p.contadorBurstCPU++;
+							p.estimativaTempoRestanteBurstCPU--;
+							return p.codigo[p.contadorDePrograma++];
+						} catch (ArrayIndexOutOfBoundsException ignored) {}
+					} else if (p.estado == PCB.Estado.PRONTO) {
+						p.jaObteveRespostaCPU = true;
+						p.estado = PCB.Estado.EXECUTANDO;
+						listaProntos.remove(p);
+						listaExecutando.add(p);
+						trocaContexto(null, p);
+						try {
+							p.contadorBurstCPU++;
+							p.estimativaTempoRestanteBurstCPU--;
+							return p.codigo[p.contadorDePrograma++];
+						} catch (ArrayIndexOutOfBoundsException ignored) {}
+					}
+				}
+				break;
 		}
 
 		return null;
